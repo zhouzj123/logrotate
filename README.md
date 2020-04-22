@@ -136,3 +136,17 @@ logrotate是linux中日志管理的重要工具，它可以自动对日志进行
    将编译生成的logrotate文件拷贝到单板的/sbin目录，同时将POPT编译生成的lib/* 所有文件拷贝到单板/lib/目录:
    然后就可以运行logrotate命令了。
 
+四、使用方法
+    1. 创建文件：/etc/logrotate.conf,内容为：
+     su root root
+	/log/voip/dbmgr.log
+{
+        size 1M
+        create
+        start 1
+        rotate 4
+        compress
+        copytruncate
+}
+
+   2.  /etc/crontab 下增加 */5 * * * * root /sbin/logrotate /etc/logrotate.conf ，表示第5分钟检查一次
