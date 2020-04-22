@@ -90,3 +90,49 @@ make
 # Patches and Questions
 
 Open issues or pull requests on GitHub.
+
+
+logrotate是linux中日志管理的重要工具，它可以自动对日志进行截断（或轮循）、压缩以及删除旧的日志文件。
+在发行版的桌面或者服务器linux系统中这个工具安装一般都是比较容易，或者默认已经自带，但是嵌入式系统一
+般需要通过源码来自己构建。本文就如何通过交叉工具链构建logrotate进行讲解。
+    由于logrotate依赖于POPT库，所以要生成logrotate需要先构建POPT库，然后再利用POPT库构建logrotate。
+	
+一、构建POPT库
+    从https://github.com/devzero2000/POPT下载最新的master分支源码包POPT-master.zip
+  1. 解压POPT-master.zip到/home/warmbobo/tools/POPT-master/目录，进入此源码目录
+  2. 生成configure文件
+	# ./autogen.sh  
+		如果安装了libtool，仍报错，就执行下面操作
+	   sudo apt install libtool-bin
+  3. 配置交叉编译环境
+    1）创建安装目录# mkdir install    
+	2）添加交叉工具链环境变量# export PATH=$PATH:/home/warmbobo/crosstool/arm-unknown-linux-gnueabi/bin/    
+	3）配置编译环境
+	  # ./configure --host=mipsel-openwrt-linux --prefix=$PWD/install CFLAGS=-fno-stack-protector
+	   重要：CFLAGS=-fno-stack-protector : 不使用栈保护， 如果使用栈保护，会导致logrotate编译不过
+	4. 构建
+    1) make
+    2) make install
+    构建好后会在$PWD/install  生成“include  lib  share” 三个目录，
+	其中lib目录有logrotate编译和运行需要的库文件，include目录有我们编译logrotate需要的头文件。
+	
+二、构建logrotate
+    从https://github.com/logrotate/logrotate下载最新的源码logrotate-master.zip。
+  1. 解压并进入源码路径/home/warmbobo/tools/logrotate-master/ 
+  2. 生成configure文件# ./autogen.sh  
+  3. 配置交叉编译环境
+    1）添加交叉工具链环境变量# export PATH=$PATH:/home/warmbobo/crosstool/arm-unknown-linux-gnueabi/bin/    
+	2）配置编译环境  
+	  # ./configure CC=mipsel-openwrt-linux-gcc --host=mipsel-openwrt-linux --prefix=$PWD/install \
+	     LDFLAGS=-L./install/popt/lib CPPFLAGS=-I./install/popt/include  
+	  其中LDFLAGS指定logrotate编译依赖库lpopt路径；
+	  而CPPFLAGS指定logrotate编译依赖头文件popt.h路径。
+  4.构建
+    1）make
+    2）make install
+    构建好后会在/home/warmbobo/tools/logrotate-master/install/目录生成sbin/logrotate文件。
+
+三、单板运行
+   将编译生成的logrotate文件拷贝到单板的/sbin目录，同时将POPT编译生成的lib/* 所有文件拷贝到单板/lib/目录:
+   然后就可以运行logrotate命令了。
+
