@@ -135,6 +135,7 @@ logrotate是linux中日志管理的重要工具，它可以自动对日志进行
 三、单板运行
    将编译生成的logrotate文件拷贝到单板的/sbin目录，同时将POPT编译生成的lib/* 所有文件拷贝到单板/lib/目录:
    然后就可以运行logrotate命令了。
+   如果报缺少libssp.so, 可以创建一个libssp.so（提供栈保护，目前版本已经强制取消栈保护）来代替。
 
 四、使用方法
     1. 创建文件：/etc/logrotate.conf,内容为：
